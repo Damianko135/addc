@@ -14,7 +14,7 @@
     ```
 - An ADDC
 - An ADDC user for the app, preferable with just read permissions.
-
+- For development, ensure you have a domain name pointing to 127.0.0.1 in your hosts file, and ensure you put that in the .env file
 
 Usefull commands:
 ```bash

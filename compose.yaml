@@ -1,29 +1,31 @@
 services:
-  server:
-    build:
-      context: .
-      target: final
-    volumes:
-      - .:/app
+  go-server:
+    # build:
+    #   context: .
+    #   target: final
+    # volumes:
+    #   - .:/app
+    image: golang:1.24.2
     container_name: web
     restart: unless-stopped
     ports:
       - 8080:${PORT:-8080}  # Using fallback port if PORT is not set
     environment:
       - SERVICE_NAME=web
-      - VIRTUAL_HOST=${DOMAIN:-localhost}  # Fixed the space around the `:-`
+      - VIRTUAL_HOST=${DOMAIN:-web.local} 
       - VIRTUAL_PORT=${PORT:-8080}
-      - LETSENCRYPT_HOST=${DOMAIN:-localhost}
-      - NODE_ENV=development
       - PORT=${PORT:-8080}
-    labels:
-      - "autoheal=true"
+    working_dir: /app
+    command: >
+      sh -c "go mod tidy && go run ."
+    volumes:
+      - .:/app
     networks:
       - nginx-net
 
   # Nginx reverse proxy
   proxy:
-    image: nginxproxy/nginx-proxy:latest
+    image: nginxproxy/nginx-proxy:alpine
     container_name: nginx-proxy
     restart: unless-stopped
     volumes:
@@ -34,11 +36,11 @@ services:
       - 443:443
     environment:
       - VIRTUAL_HOST=${DOMAIN}
-      - LETSENCRYPT_HOST=${DOMAIN}
+
     labels:
       - "com.github.nginx-proxy.nginx"
     depends_on:
-      - server  # Corrected 'web' to 'server', since the service is named 'server'
+      - go-server
     networks:
       - nginx-net
 
